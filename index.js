@@ -95,7 +95,14 @@ app.get("/",function (request,response){
 
 
 app.get("/movies", async function (request,response){
-  const movies= await client.db("guvi-db").collection("movies").find({}).toArray();
+
+  if (request.query.rating){
+
+    request.query.rating= +request.query.rating;
+  }
+  console.log(request.query);
+  
+  const movies= await client.db("guvi-db").collection("movies").find(request.query).toArray();
     response.send(movies);
 })
 
@@ -105,6 +112,33 @@ app.get("/movies/:id", async function (request,response){
     const movie= await client.db("guvi-db").collection("movies").findOne({id:id})
    movie? response.send(movie) : response.send({msg:"movie not found"})
 })
+
+app.delete("/movies/:id", async function (request,response){
+  const {id}=request.params;
+  // console.log(request.params,id)
+  // const movie=movies.find((mv)=>mv.id==id);
+//   const movie= await client.db("guvi-db").collection("movies").deleteOne({id:id});
+//  movie? response.send(movie) : response.send({msg:"movie not found"})
+client.db("guvi-db").collection("movies")
+    .deleteOne({id:id}, function (err, movie) {
+      if (err) {
+        res.status(400).send("error while deleting movie");
+      } else {
+        response.send(movie);
+      }
+    });
+})
+
+app.put("/movies/:id", async function (request,response){
+  const {id}=request.params;
+  console.log(request.params,id)
+  // const movie=movies.find((mv)=>mv.id==id);
+  const data=request.body;
+  const movie= await client.db("guvi-db").collection("movies").updateOne({id:id},{$set:data});
+response.send(movie)
+})
+
+
 app.post("/movies", async function (request,response){
   const data=request.body;
   console.log(data);
